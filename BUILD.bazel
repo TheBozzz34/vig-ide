@@ -1,0 +1,45 @@
+load("@rules_zig//zig:defs.bzl", "zig_binary", "zig_library", "zig_test")
+
+package(default_visibility = ["//visibility:public"])
+
+ZIG_SRCS = glob(["src/*.zig"])
+
+# The application library is deliberately independent of a GUI backend.  A
+# windowing/rendering dependency can be added here once its platform and
+# licensing choices are settled, without changing the public executable label.
+zig_library(
+    name = "vig_ide",
+    srcs = ZIG_SRCS,
+    import_name = "vig_ide",
+    main = "src/app.zig",
+)
+
+zig_binary(
+    name = "vigide",
+    srcs = ZIG_SRCS,
+    deps = [":vig_ide"],
+    main = "src/main.zig",
+)
+
+# Buildable IDE-facing command-line tools.  The future GUI can make these
+# available through runfiles or replace them with library-level integrations.
+filegroup(
+    name = "toolchain",
+    srcs = [
+        "@vig//:vig",
+        "@vig_assembler//:vigasm",
+        "@vig_linker//:vigld",
+        "@vigcc//:vigcc",
+    ],
+)
+
+zig_test(
+    name = "app_test",
+    srcs = ZIG_SRCS,
+    main = "src/app.zig",
+)
+
+test_suite(
+    name = "tests",
+    tests = [":app_test"],
+)
